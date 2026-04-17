@@ -1,0 +1,910 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Load Balancer</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      :root {
+        --bg-primary: #ffffff;
+        --bg-secondary: #f5f5f5;
+        --bg-tertiary: #efefef;
+        --text-primary: #1a1a1a;
+        --text-secondary: #666666;
+        --text-tertiary: #999999;
+        --border-color: #e0e0e0;
+        --accent-blue: #0066ff;
+        --accent-green: #10a937;
+        --accent-red: #d84315;
+        --accent-orange: #ff9800;
+        --accent-yellow: #fbc02d;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", sans-serif;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        line-height: 1.6;
+      }
+
+      .app {
+        min-height: 100vh;
+        padding: 24px;
+      }
+
+      .header {
+        margin-bottom: 32px;
+      }
+
+      .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+      }
+
+      .header h1 {
+        font-size: 28px;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+
+      .header p {
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin-top: 4px;
+      }
+
+      .header-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        background: #e8f5e9;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--accent-green);
+      }
+
+      .header-badge::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        background: var(--accent-green);
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: 24px;
+        margin-bottom: 24px;
+      }
+
+      @media (max-width: 1024px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .card {
+        background: var(--bg-primary);
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        padding: 24px;
+        transition: all 0.3s ease;
+      }
+
+      .card:hover {
+        border-color: #d0d0d0;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      }
+
+      .card-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 16px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .control-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .button {
+        padding: 10px 16px;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      .button:active {
+        transform: translateY(0);
+      }
+
+      .btn-primary {
+        background: var(--accent-blue);
+        color: white;
+        width: 100%;
+      }
+
+      .btn-primary:hover {
+        background: #0052cc;
+      }
+
+      .btn-danger {
+        background: #fff3e0;
+        color: var(--accent-orange);
+        width: 100%;
+      }
+
+      .btn-danger:hover {
+        background: #ffe0b2;
+      }
+
+      .btn-secondary {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        width: 100%;
+        border: 1px solid var(--border-color);
+      }
+
+      .btn-secondary:hover {
+        background: var(--bg-tertiary);
+      }
+
+      .slider-group {
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border-color);
+      }
+
+      .slider-group label {
+        display: block;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+      }
+
+      input[type="range"] {
+        width: 100%;
+        height: 4px;
+        border-radius: 2px;
+        background: var(--border-color);
+        outline: none;
+        -webkit-appearance: none;
+        appearance: none;
+      }
+
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--accent-blue);
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      input[type="range"]::-moz-range-thumb {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--accent-blue);
+        cursor: pointer;
+        border: none;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .slider-value {
+        font-size: 13px;
+        color: var(--accent-blue);
+        font-weight: 600;
+        margin-top: 6px;
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .main-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+
+      @media (max-width: 768px) {
+        .stats-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      .stat-card {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 16px;
+        text-align: center;
+      }
+
+      .stat-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--accent-blue);
+        margin-bottom: 4px;
+      }
+
+      .stat-label {
+        font-size: 12px;
+        color: var(--text-secondary);
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .servers-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+
+      @media (max-width: 768px) {
+        .servers-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      @media (max-width: 480px) {
+        .servers-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .server-card {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 16px;
+        transition: all 0.3s ease;
+      }
+
+      .server-card:hover {
+        border-color: #d0d0d0;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      }
+
+      .server-card.failed {
+        background: #ffebee;
+        border-color: #ffcdd2;
+      }
+
+      .server-card.warning {
+        background: #fff3e0;
+        border-color: #ffe0b2;
+      }
+
+      .server-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+
+      .server-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+
+      .status-badge {
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .badge-healthy {
+        background: #e8f5e9;
+        color: var(--accent-green);
+      }
+
+      .badge-busy {
+        background: #fff3e0;
+        color: var(--accent-orange);
+      }
+
+      .badge-failed {
+        background: #ffebee;
+        color: var(--accent-red);
+      }
+
+      .server-stats {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .stat-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: var(--text-secondary);
+      }
+
+      .stat-row strong {
+        color: var(--text-primary);
+        font-weight: 600;
+      }
+
+      .load-bar {
+        width: 100%;
+        height: 4px;
+        background: var(--border-color);
+        border-radius: 2px;
+        overflow: hidden;
+      }
+
+      .load-fill {
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          var(--accent-blue),
+          var(--accent-green)
+        );
+        border-radius: 2px;
+        transition: width 0.3s ease;
+      }
+
+      .load-fill.warning {
+        background: linear-gradient(
+          90deg,
+          var(--accent-orange),
+          var(--accent-red)
+        );
+      }
+
+      .requests-container {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .request-list {
+        max-height: 400px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column-reverse;
+        gap: 8px;
+      }
+
+      .request-list::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      .request-list::-webkit-scrollbar-track {
+        background: var(--bg-secondary);
+        border-radius: 3px;
+      }
+
+      .request-list::-webkit-scrollbar-thumb {
+        background: var(--border-color);
+        border-radius: 3px;
+      }
+
+      .request-list::-webkit-scrollbar-thumb:hover {
+        background: #c0c0c0;
+      }
+
+      .request-item {
+        background: var(--bg-secondary);
+        padding: 10px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        animation: slideIn 0.2s ease;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateX(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      .request-info {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex: 1;
+      }
+
+      .request-num {
+        font-weight: 700;
+        color: var(--accent-blue);
+        min-width: 35px;
+      }
+
+      .request-details {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        color: var(--text-secondary);
+        font-size: 12px;
+      }
+
+      .request-badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      .badge-success {
+        background: #e8f5e9;
+        color: var(--accent-green);
+      }
+
+      .badge-queued {
+        background: #fff3e0;
+        color: var(--accent-orange);
+      }
+
+      .badge-failed {
+        background: #ffebee;
+        color: var(--accent-red);
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--text-tertiary);
+      }
+
+      .empty-state-icon {
+        font-size: 32px;
+        margin-bottom: 8px;
+      }
+
+      .empty-state-text {
+        font-size: 13px;
+      }
+
+      @media (max-width: 768px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .header h1 {
+          font-size: 24px;
+        }
+
+        .stats-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <div class="header">
+        <div class="header-content">
+          <div>
+            <h1>Load Balancer</h1>
+            <p>Tatkal High-Traffic Simulation</p>
+          </div>
+          <div class="header-badge">
+            <span>Connected</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="totalRequests">0</div>
+          <div class="stat-label">Total Requests</div>
+        </div>
+        <div class="stat-card">
+          <div
+            class="stat-value"
+            style="color: var(--accent-green)"
+            id="successCount"
+          >
+            0
+          </div>
+          <div class="stat-label">✓ Successful</div>
+        </div>
+        <div class="stat-card">
+          <div
+            class="stat-value"
+            style="color: var(--accent-orange)"
+            id="queuedCount"
+          >
+            0
+          </div>
+          <div class="stat-label">⧖ Queued</div>
+        </div>
+        <div class="stat-card">
+          <div
+            class="stat-value"
+            style="color: var(--accent-red)"
+            id="failedCount"
+          >
+            0
+          </div>
+          <div class="stat-label">✕ Failed</div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <div class="card-title">Control</div>
+          <div class="control-panel">
+            <button class="button btn-primary" onclick="sendSingleRequest()">
+              ➕ Single Request
+            </button>
+            <button
+              class="button btn-primary"
+              onclick="sendBurst()"
+              style="background: #ff6b35"
+            >
+              🔥 Burst (10)
+            </button>
+            <button class="button btn-danger" onclick="sendTatkalRush()">
+              ⚡ Tatkal Rush (50)
+            </button>
+            <button class="button btn-secondary" onclick="resetServers()">
+              🔄 Reset Servers
+            </button>
+            <button class="button btn-secondary" onclick="clearLog()">
+              Clear Log
+            </button>
+          </div>
+
+          <div class="slider-group">
+            <label>Request Delay</label>
+            <input
+              type="range"
+              min="0"
+              max="500"
+              value="50"
+              id="delaySlider"
+              oninput="updateDelayDisplay()"
+            />
+            <div class="slider-value">
+              <span id="delayDisplay">50ms</span>
+            </div>
+          </div>
+
+          <div class="slider-group">
+            <label>Burst Size</label>
+            <input
+              type="range"
+              min="5"
+              max="100"
+              value="10"
+              id="burstSlider"
+              oninput="updateBurstDisplay()"
+            />
+            <div class="slider-value">
+              <span id="burstDisplay">10 reqs</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="main-panel">
+          <div class="card">
+            <div class="card-title">Backend Servers</div>
+            <div class="servers-grid" id="serversGrid"></div>
+          </div>
+
+          <div class="requests-container">
+            <div class="card-title">Recent Requests</div>
+            <div class="request-list" id="requestList">
+              <div class="empty-state">
+                <div class="empty-state-icon">📭</div>
+                <div class="empty-state-text">No requests yet</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const LB_URL = "http://127.0.0.1:8000";
+      const SERVERS = [
+        { id: 1, port: 8001 },
+        { id: 2, port: 8002 },
+        { id: 3, port: 8003 },
+      ];
+
+      let requestCount = 0;
+      let stats = { total: 0, success: 0, queued: 0, failed: 0 };
+      let serverStats = {
+        1: { active: 0, total: 0, healthy: true },
+        2: { active: 0, total: 0, healthy: true },
+        3: { active: 0, total: 0, healthy: true },
+      };
+      let requestLog = [];
+
+      function initUI() {
+        createServerCards();
+        updateAllStats();
+        setInterval(updateAllStats, 1000);
+      }
+
+      function createServerCards() {
+        const grid = document.getElementById("serversGrid");
+        grid.innerHTML = SERVERS.map(
+          (server) => `
+                <div class="server-card" id="server-${server.id}">
+                    <div class="server-header">
+                        <span class="server-name">Server ${server.id}</span>
+                        <span class="status-badge badge-healthy" id="status-${server.id}">🟢 Healthy</span>
+                    </div>
+                    <div class="server-stats">
+                        <div class="stat-row">
+                            <span>Connections:</span>
+                            <strong id="active-${server.id}">0</strong>
+                        </div>
+                        <div class="stat-row">
+                            <span>Total:</span>
+                            <strong id="total-${server.id}">0</strong>
+                        </div>
+                        <div class="stat-row">
+                            <span>Until Failure:</span>
+                            <strong id="until-failure-${server.id}">50</strong>
+                        </div>
+                    </div>
+                    <div class="load-bar">
+                        <div class="load-fill" id="fill-${server.id}" style="width: 0%"></div>
+                    </div>
+                </div>
+            `,
+        ).join("");
+      }
+
+      function updateDelayDisplay() {
+        document.getElementById("delayDisplay").textContent =
+          document.getElementById("delaySlider").value + "ms";
+      }
+
+      function updateBurstDisplay() {
+        document.getElementById("burstDisplay").textContent =
+          document.getElementById("burstSlider").value + " reqs";
+      }
+
+      async function sendSingleRequest() {
+        try {
+          const response = await fetch(`${LB_URL}/book`, { method: "POST" });
+          requestCount++;
+
+          if (response.status === 200) {
+            const data = await response.json();
+            const serverId = data.server_id || "unknown";
+            addRequestLog(requestCount, "success", serverId);
+            stats.success++;
+            serverStats[serverId].total++;
+          } else if (response.status === 429) {
+            addRequestLog(requestCount, "queued", "queue");
+            stats.queued++;
+          } else {
+            addRequestLog(requestCount, "failed", "error");
+            stats.failed++;
+          }
+          stats.total++;
+        } catch (error) {
+          requestCount++;
+          addRequestLog(requestCount, "failed", "error");
+          stats.failed++;
+          stats.total++;
+        }
+        updateStatsDisplay();
+      }
+
+      async function sendBurst() {
+        const delay = parseInt(document.getElementById("delaySlider").value);
+        const count = 10;
+        for (let i = 0; i < count; i++) {
+          await sendSingleRequest();
+          if (i < count - 1) await sleep(delay);
+        }
+      }
+
+      async function sendTatkalRush() {
+        const count = 50;
+        for (let i = 0; i < count; i++) {
+          await sendSingleRequest();
+          if (i < count - 1) await sleep(20);
+        }
+      }
+
+      function addRequestLog(num, status, server) {
+        const log = {
+          num,
+          status,
+          server,
+          timestamp: new Date().toLocaleTimeString(),
+        };
+        requestLog.unshift(log);
+        if (requestLog.length > 50) requestLog.pop();
+        updateRequestDisplay();
+      }
+
+      function updateRequestDisplay() {
+        const list = document.getElementById("requestList");
+
+        if (requestLog.length === 0) {
+          list.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">No requests yet</div></div>`;
+          return;
+        }
+
+        list.innerHTML = requestLog
+          .map(
+            (log) => `
+                <div class="request-item">
+                    <div class="request-info">
+                        <span class="request-num">#${log.num}</span>
+                        <div class="request-details">
+                            <span>→ ${log.server === "error" ? "Error" : log.server === "queue" ? "Queue" : "Server " + log.server}</span>
+                            <span>${log.timestamp}</span>
+                        </div>
+                    </div>
+                    <span class="request-badge ${log.status === "success" ? "badge-success" : log.status === "queued" ? "badge-queued" : "badge-failed"}">
+                        ${log.status === "success" ? "✓" : log.status === "queued" ? "⧖" : "✕"}
+                    </span>
+                </div>
+            `,
+          )
+          .join("");
+      }
+
+      async function resetServers() {
+        for (const server of SERVERS) {
+          try {
+            await fetch(`http://127.0.0.1:${server.port}/reset`, {
+              method: "POST",
+            });
+          } catch (error) {}
+        }
+        requestLog = [];
+        requestCount = 0;
+        stats = { total: 0, success: 0, queued: 0, failed: 0 };
+        serverStats = {
+          1: { active: 0, total: 0, healthy: true },
+          2: { active: 0, total: 0, healthy: true },
+          3: { active: 0, total: 0, healthy: true },
+        };
+        updateStatsDisplay();
+        updateRequestDisplay();
+        createServerCards();
+        alert("✅ All servers reset");
+      }
+
+      function clearLog() {
+        requestLog = [];
+        updateRequestDisplay();
+      }
+
+      async function updateAllStats() {
+        try {
+          const response = await fetch(`${LB_URL}/status`);
+          if (response.status === 200) {
+            const data = await response.json();
+            data.servers.forEach((server) => {
+              serverStats[server.id].active = server.active_connections;
+              serverStats[server.id].total = server.total_requests;
+              serverStats[server.id].healthy = server.is_healthy;
+              updateServerCard(server.id);
+            });
+          }
+        } catch (error) {}
+      }
+
+      function updateServerCard(serverId) {
+        const stat = serverStats[serverId];
+        const card = document.getElementById(`server-${serverId}`);
+
+        document.getElementById(`active-${serverId}`).textContent = stat.active;
+        document.getElementById(`total-${serverId}`).textContent = stat.total;
+        document.getElementById(`until-failure-${serverId}`).textContent =
+          Math.max(0, 50 - stat.total);
+
+        const loadPercent = Math.min((stat.active / 5) * 100, 100);
+        const fill = document.getElementById(`fill-${serverId}`);
+        fill.style.width = loadPercent + "%";
+
+        const statusBadge = document.getElementById(`status-${serverId}`);
+
+        if (!stat.healthy) {
+          card.classList.add("failed");
+          card.classList.remove("warning");
+          statusBadge.textContent = "🔴 Failed";
+          statusBadge.className = "status-badge badge-failed";
+          fill.classList.add("warning");
+        } else if (loadPercent > 70) {
+          card.classList.add("warning");
+          card.classList.remove("failed");
+          statusBadge.textContent = "🟡 Busy";
+          statusBadge.className = "status-badge badge-busy";
+          fill.classList.add("warning");
+        } else {
+          card.classList.remove("failed", "warning");
+          statusBadge.textContent = "🟢 Healthy";
+          statusBadge.className = "status-badge badge-healthy";
+          fill.classList.remove("warning");
+        }
+      }
+
+      function updateStatsDisplay() {
+        document.getElementById("totalRequests").textContent = stats.total;
+        document.getElementById("successCount").textContent = stats.success;
+        document.getElementById("queuedCount").textContent = stats.queued;
+        document.getElementById("failedCount").textContent = stats.failed;
+      }
+
+      function sleep(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+      }
+
+      document.addEventListener("DOMContentLoaded", initUI);
+    </script>
+  </body>
+</html>

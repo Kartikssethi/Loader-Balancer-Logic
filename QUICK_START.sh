@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Quick start with auto-open instructions
+# This script starts all components and opens a helper window
+
+echo "🚀 Smart Load Balancer - Starting System..."
+echo ""
+echo "========================================"
+echo "📋 OPEN THESE IN SEPARATE TERMINALS:"
+echo "========================================"
+echo ""
+echo "Terminal 1 - Backend Server 1:"
+echo "  bash start_backend.sh 1 8001"
+echo ""
+echo "Terminal 2 - Backend Server 2:"
+echo "  bash start_backend.sh 2 8002"
+echo ""
+echo "Terminal 3 - Backend Server 3:"
+echo "  bash start_backend.sh 3 8003"
+echo ""
+echo "Terminal 4 - Load Balancer:"
+echo "  bash start_lb.sh"
+echo ""
+echo "Terminal 5 - Run Tests (after others are ready):"
+echo "  python test_load_balancer.py"
+echo ""
+echo "========================================"
+echo "⏱️  Wait 3-5 seconds for all to start"
+echo "========================================"
+echo ""
